@@ -1,0 +1,29 @@
+output_root: paper_outputs
+experiments:
+  - flat
+  - irregular
+  - rough
+algorithms:
+  - ppo
+  - sac
+  - td3
+seeds:
+  - 42
+  - 43
+  - 44
+  - 45
+  - 46
+seed: 42
+hyperparams_source: default
+tune_base_source: default
+final_eval_episodes: 100
+skip_tune: false
+skip_train: false
+skip_eval: false
+record_videos: false
+resume: false
+video:
+  episodes: 1
+  max_steps: 1200
+  seed: null
+  fast_viz: false

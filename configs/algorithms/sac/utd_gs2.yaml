@@ -1,0 +1,4 @@
+algorithm_versions:
+  utd_gs2:
+    model_kwargs:
+      gradient_steps: 2

@@ -1,0 +1,271 @@
+experiment:
+  name: default
+  description: >-
+    Lightweight dev/smoke profile (short runs, flat plane, no reward/goal terrain curricula).
+    For research use flat, irregular, or rough instead — this file is not a copy of those.
+environment:
+  simulator:
+    dt: 0.02
+    substeps: 2
+    max_collision_pairs: 256
+  robot:
+    urdf_path: assets/urdf/robots/go2/urdf/go2.urdf
+    num_actions: 12
+    joint_names:
+      - FR_hip_joint
+      - FR_thigh_joint
+      - FR_calf_joint
+      - FL_hip_joint
+      - FL_thigh_joint
+      - FL_calf_joint
+      - RR_hip_joint
+      - RR_thigh_joint
+      - RR_calf_joint
+      - RL_hip_joint
+      - RL_thigh_joint
+      - RL_calf_joint
+    default_joint_angles:
+      FL_hip_joint: 0.0
+      FR_hip_joint: 0.0
+      RL_hip_joint: 0.0
+      RR_hip_joint: 0.0
+      FL_thigh_joint: 0.8
+      FR_thigh_joint: 0.8
+      RL_thigh_joint: 1.0
+      RR_thigh_joint: 1.0
+      FL_calf_joint: -1.5
+      FR_calf_joint: -1.5
+      RL_calf_joint: -1.5
+      RR_calf_joint: -1.5
+    base_init_pos: [0.0, 0.0, 0.42]
+    base_init_quat: [1.0, 0.0, 0.0, 0.0]
+    init_joint_noise_rad: 0.06
+  control:
+    mode: position_pd
+    kp: 22.0
+    kd: 0.7
+    action_scale: 0.25
+    clip_actions: 100.0
+    simulate_action_latency: true
+  observations:
+    scales:
+      projected_gravity: 1.0
+      imu_gyro: 0.25
+      cmd_vel: 1.0
+      cross_track_error: 1.0
+      heading_error: 1.0
+      remaining_distance: 0.25
+      goal_heading: 1.0
+      dof_pos: 1.0
+      dof_vel: 0.05
+  terrain:
+    mode: irregular
+    enabled: false
+    size: [32.0, 32.0]
+    resolution: [64, 64]
+    height_range: [-1.5, 1.5]
+    num_functions: 6
+    uv_scale: 20.0
+    flat_radius: 4.0
+    seed: null
+  goal:
+    spawn_margin_m: 4.0
+    min_distance_m: 5.0
+    max_distance_m: 14.0
+    marker_radius_m: 0.12
+    curriculum:
+      enabled: false
+  bezier:
+    num_samples: 64
+    handle_ratio: 0.35
+    handle_min_m: 0.45
+    handle_max_m: 3.50
+    lookahead_m: 0.90
+    target_speed_mps: 0.65
+    decel_radius_m: 3.50
+    stop_radius_m: 0.75
+    yaw_kp: 2.00
+    yaw_rate_max: 1.40
+    a_lat_max_mps2: 1.20
+    curvature_eps: 1.0e-4
+    corridor_reward_m: 0.70
+    max_deviation_m: 2.20
+    approach_radius_m: 0.95
+    success_radius_m: 0.28
+    success_yaw_deg: 175.0
+    success_speed_mps: 1.45
+    success_yaw_rate_rad_s: 2.80
+    hold_steps: 1
+    stagnation_progress_eps: 0.004
+    stagnation_consistent_progress_eps: 0.002
+    stagnation_steps_limit: 80
+    stagnation_min_remaining_m: 0.70
+    stagnation_residual_speed_mps: 0.12
+    stagnation_uphill_slope_deg: 2.5
+    stagnation_recovery_steps: 1
+  sensors:
+    imu:
+      enabled: true
+      magnetic_field: [1.0, 0.0, 0.0]
+      acc_noise: [0.0, 0.0, 0.0]
+      gyro_noise: [0.0, 0.0, 0.0]
+      mag_noise: [0.0, 0.0, 0.0]
+      acc_random_walk: [0.0, 0.0, 0.0]
+      gyro_random_walk: [0.0, 0.0, 0.0]
+      mag_random_walk: [0.0, 0.0, 0.0]
+      delay: 0.0
+      jitter: 0.0
+      interpolate: false
+      draw_debug: false
+    feet:
+      enabled: true
+      contact_force_threshold: 5.0
+      impact_force_threshold: 120.0
+      min_force: 0.0
+      max_force: [200.0, 200.0, 200.0]
+      noise: [0.0, 0.0, 0.0]
+      bias: [0.0, 0.0, 0.0]
+      random_walk: [0.0, 0.0, 0.0]
+      delay: 0.0
+      jitter: 0.0
+      interpolate: false
+      draw_debug: false
+    lidar:
+      enabled: false
+      horizontal_fov_deg: [-180.0, 180.0]
+      vertical_fov_deg: [0.0, 90.0]
+      n_points: [48, 4]
+      bins_azimuth: 24
+      bins_elevation: 3
+      min_range: 0.05
+      max_range: 30.0
+      no_hit_value: 30.0
+      ray_start_offset_m: 0.06
+      enable_noise: false
+      noise_std: 0.0
+      draw_debug: false
+    camera:
+      enabled: false
+      link: front_camera
+      pos_offset: [0.32715, -0.00003, 0.04297]
+      euler_offset: [0.0, 0.0, 0.0]
+  rewards:
+    only_positive_rewards: false
+    base_height_target: 0.30
+    base_height_tolerance: 0.04
+    tracking_sigma: 0.28
+    goal_yaw_sigma: 0.16
+    stop_lin_sigma: 0.055
+    stop_yaw_sigma: 0.085
+    moving_threshold_mps: 0.15
+    turn_in_place_speed_threshold: 0.15
+    turn_in_place_cmd_threshold: 0.10
+    turn_in_place_yaw_rate_rad_s: 0.35
+    airtime_speed_threshold: 0.18
+    airtime_cap_s: 0.18
+    slope_sample_distance_m: 0.22
+    climbable_slope_deg_min: 3.0
+    climbable_slope_deg_max: 16.0
+    curve_progress_heading_soft_min_cos: -0.20
+    curve_progress_heading_full_cos: 0.85
+    curve_progress_heading_min_gate: 0.20
+    orientation_slope_relief: 0.35
+    base_height_slope_relief: 0.45
+    similar_to_default_slope_relief: 0.12
+    upward_vel_slope_relief: 0.08
+    lin_vel_z_slope_relief: 0.08
+    dense_scales:
+      tracking_lin_vel: 1.45
+      tracking_ang_vel: 0.72
+      curve_progress: 7.50
+      cross_track: -1.45
+      heading_alignment: 0.38
+      reverse_vel: -1.90
+      lateral_vel: -0.95
+      upward_vel: -1.90
+      flight_phase: -0.95
+      orientation: -0.95
+      base_height: -4.80
+      lin_vel_z: -1.45
+      ang_vel_xy: -0.048
+      action_rate: -0.009
+      joint_torque: -9.0e-6
+      dof_acc: -2.4e-7
+      similar_to_default: -0.048
+      feet_air_time: 0.18
+      trot_contact: 0.28
+      goal_heading_track: 0.95
+      hold_still: 1.90
+    terminal_scales:
+      success: 45.0
+      fall: -9.0
+      curve_deviation: -4.5
+      stagnation: -2.8
+    caps:
+      base_height: 0.72
+      orientation: 0.48
+      cross_track: 0.48
+      action_rate: 0.24
+      reverse_vel: 0.38
+      lateral_vel: 0.38
+      upward_vel: 0.38
+    curriculum:
+      enabled: false
+  termination:
+    episode_length_s: 20.0
+    posture_soft_roll_deg: 30.0
+    posture_soft_pitch_deg: 30.0
+    roll_deg: 52.0
+    pitch_deg: 52.0
+    bad_posture_patience: 16
+    critical_posture_patience: 5
+    fall_base_height_threshold: 0.14
+evaluation:
+  task_score_mode: article
+  scientific_gates:
+    enabled: false
+training:
+  total_timesteps: 2000000
+  train_num_envs: 256
+  eval_num_envs: 16
+  checkpoint_freq_env_steps: 25000
+  eval_freq_env_steps: 50000
+  n_eval_episodes: 5
+  deterministic_eval: true
+  verbose: 1
+  normalization:
+    enabled: true
+    norm_obs: true
+    norm_reward: true
+    clip_obs: 10.0
+    clip_reward: 10.0
+    gamma: 0.99
+    epsilon: 1.0e-8
+  early_stopping:
+    enabled: false
+    max_no_improvement_evals: 8
+    min_evals: 6
+visualization:
+  default_episodes: 1
+  default_max_steps: 1500
+  record_video: false
+  video_camera:
+    offset: [-1.4, -0.40, 0.42]
+    lookat_offset: [0.15, 0.0, 0.0]
+    fov: 52
+    follow_robot: true
+    follow_smoothing: 0.90
+optuna:
+  search_space:
+    rewards.dense_scales.curve_progress:
+      type: float
+      low: 6.5
+      high: 9.0
+      step: 0.5
+      phase: locomotion
+    bezier.target_speed_mps:
+      type: float
+      low: 0.55
+      high: 0.85
+      step: 0.05
+      phase: locomotion

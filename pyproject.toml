@@ -1,0 +1,106 @@
+[project]
+name = "quadruped-rl-genesis"
+version = "1.0.0"
+description = "Research-grade deep reinforcement learning experiments for Unitree Go2 navigation in Genesis."
+authors = [
+    { name = "Rodrigo Santos da Silva", email = "rodrigo.silva@dcc.ufmg.br" },
+    { name = "Bruno Lemos de Lima", email = "brunos.lemos@dcc.ufmg.br" },
+]
+readme = "README.md"
+requires-python = ">=3.12, <3.14"
+dependencies = [
+    "numpy>=2.4,<3.0",
+    "scipy>=1.17,<2.0",
+    "torch>=2.3,<3.0",
+    "gymnasium>=0.29.1,<1.3",
+    "stable-baselines3>=2.7.1,<3.0.0",
+    "optuna>=4.7.0,<5.0.0",
+    "python-dotenv>=1.2.2,<2.0",
+    "pyyaml>=6.0.3,<7.0",
+    "tensorboard>=2.20,<3.0",
+    "tqdm>=4.67,<5.0",
+    "imageio>=2.37.3,<3.0",
+    "PyOpenGL-accelerate>=3.1.9",
+    "genesis-world==0.4.2",
+]
+
+[project.scripts]
+quadruped-rl-genesis = "quadruped_rl_genesis.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.15,<0.16",
+]
+
+[tool.poetry]
+packages = [{ include = "quadruped_rl_genesis", from = "src" }]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+src = ["src", "main.py"]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "artifacts",
+]
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = [
+    "E4",   # pycodestyle: import
+    "E7",   # pycodestyle: statement
+    "E9",   # pycodestyle: runtime
+    "F",    # pyflakes
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "C4",   # flake8-comprehensions
+    "PIE",  # flake8-pie
+    "RUF",  # ruff-specific
+    "D",    # pydocstyle (Google convention below)
+]
+ignore = [
+    "E501",   # line length (handled by formatter where possible)
+    "RUF001", # ambiguous unicode in strings (scientific text)
+    "RUF002", # ambiguous unicode in docstrings
+    "RUF003", # ambiguous unicode in comments
+    "B905",   # zip(strict=...): many call sites; lengths are intentionally paired
+    "SIM105", # try/except/pass is often clearer than contextlib.suppress in UI code
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Optuna callbacks close over loop variables; values are bound at call time by design.
+"src/quadruped_rl_genesis/pipeline/tune.py" = ["B023"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["quadruped_rl_genesis"]
+
+# Google docstrings: one-line summary; optional ``Args`` / ``Returns`` / ``Raises`` sections.
+# Module docstring is the first statement (only ``from __future__`` may precede it).
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[build-system]
+requires = ["poetry-core>=2.3.1,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
