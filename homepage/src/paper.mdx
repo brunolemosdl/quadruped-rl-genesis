@@ -1,0 +1,162 @@
+---
+title: "Deep Reinforcement Learning for Quadruped Locomotion in Genesis: A Comparative Study of PPO, SAC, and TD3 in Irregular Terrains"
+authors:
+  - name: Bruno Lemos
+    url: https://orcid.org/0009-0000-7906-1751
+    institution: Federal University of Minas Gerais
+  - name: Rodrigo Silva
+    url: https://orcid.org/0000-0001-6795-1597
+    institution: Federal University of Minas Gerais
+  - name: Guilherme Maia
+    url: https://orcid.org/0000-0001-9758-7829
+    institution: Federal University of Minas Gerais
+  - name: Luiz Chaimowicz
+    url: https://orcid.org/0000-0001-8156-9941
+    institution: Federal University of Minas Gerais
+conference: 2026 Brazilian Conference on Robotics (CROS 2026)
+links:
+  - name: Code
+    url: https://github.com/brunolemosdl/quadruped-rl-genesis
+    icon: ri:github-line
+
+theme: device
+favicon: favicon.svg
+description: "A reproducible benchmark comparing PPO, SAC, and TD3 for Unitree Go2 quadruped locomotion in Genesis across flat and irregular terrains."
+thumbnail: screenshot-light.png
+---
+
+import Video from "./components/Video.astro";
+import HighlightedSection from "./components/HighlightedSection.astro";
+import Figure from "./components/Figure.astro";
+import TwoColumns from "./components/TwoColumns.astro";
+import Wide from "./components/Wide.astro";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/starwind/tabs";
+
+<Video src="/media/videos/visualize.mp4" />
+
+<HighlightedSection>
+
+## Abstract
+
+Reliable quadruped navigation over irregular terrain remains challenging, and controlled comparisons of standard reinforcement-learning baselines in Genesis are still limited. We present a reproducible benchmark for Unitree Go2 navigation along fixed cubic Bézier routes to sampled goals on flat and procedural irregular terrain. PPO, SAC, and TD3 are tuned separately with Optuna, trained for 50M environment steps, and evaluated across five training seeds; a uniform-random policy is included as a non-learning baseline. Results are obtained using the best checkpoint from each seed and 100 deterministic evaluation episodes. PPO is the strongest method on both terrain types, reaching **97.6% success** and a task score of **119.65** on flat terrain, and **68.0% success** with a task score of **75.68** on irregular terrain. TD3 shows partial competence on irregular terrain but with high variance, whereas SAC remains close to the random baseline. However, no method meets the benchmark's stricter stop-and-settle acceptance criteria. PPO is therefore a strong baseline rather than a solved controller, and the design of rewards and terminations remains central to robust learning in this benchmark.
+
+</HighlightedSection>
+
+## Overview
+
+Quadruped robots are attractive for industrial inspection and search-and-rescue because they can traverse environments that remain difficult for wheeled platforms. Controlling these systems is challenging because contact-rich locomotion couples high-dimensional state estimation, nonlinear dynamics, and terrain-dependent failure modes. Simulation remains central to the development and stress-testing of such policies before deployment.
+
+This work presents a **reproducible Genesis/Go2 benchmark** with:
+- A specified task, observation space, reward curriculum, training procedure, and evaluation criteria
+- A five-seed comparison of PPO, SAC, and TD3 on flat and irregular terrain under a common protocol
+- A conservative reading of results: PPO emerges as the strongest baseline, TD3 shows limited progress on irregular terrain, SAC remains close to the random baseline, and none of the evaluated policies meet the stricter acceptance criteria
+
+Code and experiment configurations are publicly available at [github.com/brunolemosdl/quadruped-rl-genesis](https://github.com/brunolemosdl/quadruped-rl-genesis).
+
+## Benchmark Setup
+
+### Task and Environment
+
+All experiments use the **Unitree Go2** in Genesis 0.4.2 with a control step of 0.02 s and two physics substeps. The policy outputs 12 joint position offsets relative to a nominal standing pose; a position-PD controller applies these commands with $K_p = 22.0$, $K_d = 0.7$, and an action weight of 0.25, with a simulated action latency.
+
+Each episode begins with a sampled navigation goal and a fixed cubic **Bézier path** from spawn to goal. The planner samples 96 points along the curve, projects the robot onto the curve at each step, and outputs a body-frame command $(v_x, 0, \dot{\omega}_z)$ using 1 m lookahead with curvature-aware speed limiting. Goals follow a four-stage distance curriculum with ranges 2–6 m, 4–12 m, 6–24 m, and 8–48 m at 0, 2M, 6M, 12M, and 20M training steps.
+
+**Observations** are a 55-dimensional vector composed of: projected gravity (3), IMU gyro (3), planner command (3), cross-track error (1), heading error encoded as $\sin/\cos$ (2), remaining curve distance (1), goal-heading error encoded as $\sin/\cos$ (2), joint position error (12), joint velocity (12), binary foot contact (4), and previous action (12).
+
+### Terrain Configurations
+
+<Wide>
+  <img src="/media/images/experiment-diagram.png" alt="Genesis plus Go2 experiment flow diagram showing baseline, tuning phases, and final multi-seed evaluation" style="width:100%; border-radius: 8px;" />
+</Wide>
+
+The benchmark covers two terrain configurations:
+
+- **Flat terrain** — a planar 100 × 100 m surface serving as the locomotion baseline
+- **Irregular terrain** — a procedural 100 × 100 m heightfield at 100 × 100 resolution with heights in $[-2, 2]$ m, a 5 m flat spawn region, and a multi-scale generator combining macro undulations, ridges, local features, and swale-like depressions
+
+### Reward, Termination, and Metrics
+
+Reward shaping emphasizes route-following and motion quality over raw forward speed. Dense terms encourage command tracking, curve progress, heading alignment, diagonal stepping, and near-goal stabilization, while penalizing cross-track error, reverse and lateral motion, upward motion, airborne phases, tilt, base-height deviation, and action changes, torque, and acceleration.
+
+Terminal terms add **+50** (success), **−10** (fall/posture), **−5** (curve deviation), and **−3** (stagnation). A **three-stage curriculum** switches at 0, 3M, and 8M steps: stage 1 emphasizes route-following and basic stability, stage 2 adds locomotion-shape penalties and gait terms, stage 3 adds near-goal heading and hold-still shaping.
+
+Termination occurs on success, timeout (22 s), fall, persistent posture violation, excessive curve deviation, or stagnation. The **stricter acceptance criteria** additionally require a minimum success rate, small final goal distance, low stop speed at the goal, and a low failure rate — these are the benchmark's secondary filter.
+
+### Algorithms, Tuning, and Evaluation Protocol
+
+The benchmark compares PPO [@schulman2017proximal], SAC [@haarnoja2018soft], and TD3 [@fujimoto2018addressing] — all implemented via Stable-Baselines3 [@raffin2021stable] — plus a **uniform-random** baseline. Each algorithm is tuned separately with **Optuna** [@akiba2019optuna] in two phases (*locomotion* then *goal_stop*), then trained for **50M environment steps** with 1024 parallel environments. Results are reported over **5 training seeds** using the best checkpoint from each seed and 100 deterministic evaluation episodes.
+
+## Results and Discussion
+
+### Learning Dynamics
+
+PPO is the only method to achieve a positive task score across all five flat-terrain seeds. Its task score remains positive for 87.5% of logged checkpoints, with a normalized training-horizon AUC of 93.73 and a mean drop from peak to last checkpoint of only 2.28 points. SAC and TD3 never cross a positive task score on flat terrain — their normalized AUCs remain negative at −25.96 and −27.12, respectively.
+
+Irregular terrain narrows the gap but does not change the ranking. PPO achieves the highest reward, task score, success rate, and progress speed, yet its performance weakens relative to flat terrain: the task score drops by 43.96 points and the success rate by 29.6 percentage points. PPO reaches a positive task score in four of the five irregular-terrain seeds, with the first positive crossing appearing at 11.70M steps on average.
+
+| Method | Terrain | AUC | Pos. seeds | First +TS (M) | Pos. ckpts (%) | Peak-last |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| PPO | Flat | 93.73 ± 1.00 | 5/5 | 5.18 ± 1.20 | 87.5 ± 1.8 | 2.28 ± 1.52 |
+| SAC | Flat | −25.96 ± 0.62 | 0/5 | — | 0.0 ± 0.0 | 10.96 ± 2.05 |
+| TD3 | Flat | −27.12 ± 1.38 | 0/5 | — | 0.0 ± 0.0 | 14.96 ± 3.45 |
+| PPO | Irregular | 40.42 ± 38.85 | 4/5 | 11.70 ± 2.02 | 54.3 ± 31.7 | 25.24 ± 16.45 |
+| SAC | Irregular | −25.75 ± 0.62 | 0/5 | — | 0.0 ± 0.0 | 12.86 ± 2.62 |
+| TD3 | Irregular | −22.66 ± 4.17 | 4/5 | 14.18 ± 4.65 | 0.4 ± 0.3 | 39.11 ± 18.18 |
+
+AUC is normalized by the 50M-step horizon. First +TS is averaged only over seeds that ever achieve a positive task score.
+
+### Behavior Examples
+
+<Figure>
+  <img slot="figure" src="/media/gifs/visualize.gif" alt="Interactive visualization mode: the robot follows a Bézier path while online metrics are tracked in real time" style="width:100%; border-radius:8px;" />
+  <Fragment slot="caption">Visualization mode — the robot follows a fixed cubic Bézier route while planner commands, tracking errors, and online metrics are displayed in real time.</Fragment>
+</Figure>
+
+<Tabs defaultValue="success">
+  <TabsList>
+    <TabsTrigger value="success">Success (Flat terrain)</TabsTrigger>
+    <TabsTrigger value="failure">Failure modes</TabsTrigger>
+  </TabsList>
+  <TabsContent value="success">
+    <TwoColumns>
+      <img slot="left" src="/media/gifs/success_flat_1.gif" alt="Quadruped rollout in Genesis on flat terrain — example 1" style="width:100%; border-radius:8px;" />
+      <img slot="right" src="/media/gifs/success_flat_2.gif" alt="Quadruped rollout in Genesis on flat terrain — example 2" style="width:100%; border-radius:8px;" />
+    </TwoColumns>
+  </TabsContent>
+  <TabsContent value="failure">
+    <TwoColumns>
+      <img slot="left" src="/media/gifs/backwards.gif" alt="Failure mode: robot navigating backwards due to weak reward shaping" style="width:100%; border-radius:8px;" />
+      <img slot="right" src="/media/gifs/jumping.gif" alt="Failure mode: robot jumping due to weak success-metric specification" style="width:100%; border-radius:8px;" />
+    </TwoColumns>
+  </TabsContent>
+</Tabs>
+
+### Stop-and-Settle Analysis
+
+All eight evaluated groups (four methods × two terrains) have **0% pass rate** on the stricter stop-and-settle acceptance criteria. On flat terrain, the best PPO seeds still average a final goal distance of 0.49 m and a stop speed of 1.02 m/s, whereas the thresholds require at most 0.35 m and 0.18 m/s. On irregular terrain, PPO averages a final goal distance of 1.48 m and a stop speed of 0.69 m/s — far above the respective thresholds of 0.40 m and 0.20 m/s.
+
+This does not imply that termination-defined success is meaningless. PPO on flat terrain still achieves 97.6% termination-defined success with a mean final yaw error of only 6.9°; it is the stop speed that stays well above the acceptance threshold. The flat-terrain result is therefore a strong navigation policy that does not yet satisfy the full stop-and-settle requirement.
+
+## Conclusion
+
+We presented a comparative benchmark for PPO, SAC, and TD3 on Bézier-commanded Go2 navigation in Genesis. **PPO is the strongest baseline** on both flat and irregular terrain. SAC remains close to the random baseline, and none of the evaluated policies meet the benchmark's stricter acceptance criteria.
+
+Rather than overstating these results, the next step is to tighten the benchmark while preserving strong irregular-terrain PPO behavior. Future work should target more selective stopping rewards and terminations, better calibration of off-policy training for failure-heavy data, and more principled terrain-aware shaping — particularly for the stop-and-settle problem.
+
+## BibTeX Citation
+
+```bibtex
+@INPROCEEDINGS{lemos2026quadrupedGenesis,
+  author    = {Lemos, Bruno and Silva, Rodrigo and Maia, Guilherme and Chaimowicz, Luiz},
+  title     = {Deep Reinforcement Learning for Quadruped Locomotion in Genesis: A Comparative Study of PPO, SAC, and TD3 in Irregular Terrains},
+  booktitle = {2026 Brazilian Conference on Robotics (CROS)},
+  year      = {2026},
+  address   = {Jo{\~a}o Pessoa, Para{\'\i}ba, Brazil},
+  publisher = {IEEE},
+  isbn      = {979-8-3195-1715-9},
+}
+```
+
+## Bibliography
+
+[^ref]
