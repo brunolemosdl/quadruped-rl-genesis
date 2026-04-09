@@ -1,0 +1,46 @@
+algorithm:
+  name: sac
+  library: stable_baselines3
+  policy: MlpPolicy
+  model_kwargs:
+    learning_rate: 0.0003
+    buffer_size: 2000000
+    learning_starts: 200000
+    batch_size: 2048
+    tau: 0.005
+    gamma: 0.99
+    train_freq: 1
+    gradient_steps: 4
+    ent_coef: auto
+    use_sde: false
+  policy_kwargs:
+    activation_fn: elu
+    net_arch: [512, 256, 128]
+optuna:
+  search_space:
+    algorithm.model_kwargs.learning_rate:
+      type: float
+      low: 0.0001
+      high: 0.0005
+      log: true
+    algorithm.model_kwargs.buffer_size:
+      type: categorical
+      choices: [1500000, 2000000, 3000000]
+    algorithm.model_kwargs.learning_starts:
+      type: categorical
+      choices: [100000, 200000, 400000]
+    algorithm.model_kwargs.batch_size:
+      type: categorical
+      choices: [1024, 2048, 4096]
+    algorithm.model_kwargs.tau:
+      type: categorical
+      choices: [0.004, 0.005, 0.006]
+    algorithm.model_kwargs.gamma:
+      type: categorical
+      choices: [0.985, 0.99, 0.995]
+    algorithm.model_kwargs.gradient_steps:
+      type: categorical
+      choices: [2, 4, 8]
+    algorithm.policy_kwargs.activation_fn:
+      type: categorical
+      choices: [elu, tanh]

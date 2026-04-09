@@ -1,0 +1,35 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { publicUrl } from "../lib/public-url";
+
+interface Props extends HTMLAttributes<"video"> {
+  src: string;
+}
+
+const {
+  src: rawSrc,
+  controls = true,
+  loop = true,
+  playsinline = true,
+  muted = true,
+  autoplay = true,
+  ...videoProps
+} = Astro.props;
+
+const basePrefix = import.meta.env.BASE_URL.replace(/\/$/, "");
+const src = /^https?:\/\//i.test(rawSrc)
+  ? rawSrc
+  : rawSrc.startsWith(`${basePrefix}/`) || rawSrc === basePrefix
+    ? rawSrc
+    : publicUrl(rawSrc.startsWith("/") ? rawSrc.slice(1) : rawSrc);
+---
+
+<video
+  class="aspect-video h-auto w-full rounded-lg"
+  src={src}
+  controls={controls}
+  loop={loop}
+  playsinline={playsinline}
+  muted={muted}
+  autoplay={autoplay}
+  {...videoProps}></video>

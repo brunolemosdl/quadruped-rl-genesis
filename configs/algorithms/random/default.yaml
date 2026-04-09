@@ -1,0 +1,4 @@
+algorithm:
+  name: random
+  library: baseline
+  policy: none

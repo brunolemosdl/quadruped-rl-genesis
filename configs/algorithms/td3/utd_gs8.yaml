@@ -1,0 +1,4 @@
+algorithm_versions:
+  utd_gs8:
+    model_kwargs:
+      gradient_steps: 8

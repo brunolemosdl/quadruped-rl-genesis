@@ -1,0 +1,23 @@
+optuna:
+  n_trials: 8
+  trial_timesteps: 12500000
+  eval_episodes: 8
+  eval_freq_env_steps: 100000
+  sampler_seed: 42
+  study_direction: maximize
+  timeout_seconds: null
+  phases:
+    enabled: true
+    sequence: [locomotion, goal_stop]
+    locomotion:
+      n_trials: 4
+      trial_timesteps: 10000000
+      eval_episodes: 8
+      eval_freq_env_steps: 100000
+      timeout_seconds: null
+    goal_stop:
+      n_trials: 4
+      trial_timesteps: 15000000
+      eval_episodes: 8
+      eval_freq_env_steps: 100000
+      timeout_seconds: null
